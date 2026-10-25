@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нумерологический Калькулятор Янтр — Дарья Карасева</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #030303;
+            color: #f3f4f6;
+        }
+        .cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .gold-black-bg {
+            background: radial-gradient(circle at top, #1c1917 0%, #0a0a0a 60%, #000000 100%);
+        }
+        .gold-border {
+            border: 1px solid rgba(212, 175, 55, 0.35);
+        }
+        .gold-border-subtle {
+            border: 1px solid rgba(212, 175, 55, 0.18);
+        }
+        .gold-glow {
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.12);
+        }
+        .gold-glow-strong {
+            box-shadow: 0 0 35px rgba(212, 175, 55, 0.25);
+        }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF1B0 0%, #D4AF37 50%, #AA7C11 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .matrix-cell {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(12, 12, 12, 0.95);
+        }
+        .matrix-cell:hover {
+            transform: translateY(-2px) scale(1.02);
+            border-color: rgba(212, 175, 55, 0.9);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+        }
+        select option {
+            background-color: #0a0a0a;
+            color: #f3f4f6;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="gold-black-bg min-h-screen pb-12">
+
+    <!-- Test Mode Indicator -->
+    <div id="testModeBanner" class="hidden bg-emerald-500/20 border-b border-emerald-500/40 p-2 text-center text-emerald-300 text-xs font-semibold">
+        🛠 <strong>Режим тестирования активен:</strong> Все функции открыты.
+    </div>
+
+    <!-- Header -->
+    <header class="max-w-md mx-auto pt-6 px-4 text-center">
+        <div class="inline-block px-3.5 py-1 mb-3 rounded-full bg-amber-500/10 text-amber-300 text-[11px] font-semibold tracking-widest uppercase gold-border">
+            Нумеролог Дарья Карасева
+        </div>
+        <h1 class="cinzel text-3xl font-extrabold tracking-wide gold-gradient-text mb-1">
+            ЦИФРОВОЙ АМУЛЕТ
+        </h1>
+        <p class="text-[11px] text-amber-100/60 tracking-[0.2em] uppercase mb-1">Персональный расчет янтры</p>
+    </header>
+
+    <!-- Main Container -->
+    <main id="mainApp" class="max-w-md mx-auto px-4 space-y-6 mt-6">
+
+        <!-- Access Denied / Unpaid Banner -->
+        <div id="unpaidBanner" class="hidden bg-red-950/90 border-2 border-red-500/70 p-4 rounded-2xl text-center text-red-200 text-xs leading-relaxed shadow-xl">
+            🔒 <strong class="text-sm block text-red-100 mb-1">Доступ ограничен</strong>
+            Оформите и оплатите амулет в боте, чтобы получить персональный расчет и открыть калькулятор.
+        </div>
+
+        <!-- Input Section (Step 1 & 2: Date and Amulet selection) -->
+        <section class="bg-stone-950/80 backdrop-blur-md p-5 rounded-2xl gold-border gold-glow space-y-4">
+            <div>
+                <label class="block text-[11px] font-semibold text-amber-300/90 uppercase tracking-wider mb-2">
+                    Укажите дату рождения
+                </label>
+                <input type="date" id="birthDate" class="w-full bg-black/90 border border-amber-500/30 rounded-xl px-4 py-3 text-amber-100 focus:outline-none focus:border-amber-400 transition text-sm">
+            </div>
+
+            <!-- Target Amulet Selector -->
+            <div>
+                <label class="block text-[11px] font-semibold text-amber-300/90 uppercase tracking-wider mb-2">
+                    Цель амулета (Перепрошивка)
+                </label>
+                <select id="amuletType" class="w-full bg-black/90 border border-amber-500/30 rounded-xl px-4 py-3 text-amber-100 focus:outline-none focus:border-amber-400 transition text-sm mb-3">
+                    <option value="personal">✨ Только Персональная Янтра (База)</option>
+                    <option value="career">☀️ Карьера и реализация (Солнце)</option>
+                    <option value="calm">🌙 Спокойствие и партнерство (Луна)</option>
+                    <option value="millionaire">🪐 Янтра миллионера (Юпитер)</option>
+                    <option value="chaos">🐍 Контроль хаоса (Раху)</option>
+                    <option value="money">☿ Быстрые деньги и удача (Меркурий)</option>
+                    <option value="love">♀ Любовь и крупная покупка (Венера)</option>
+                    <option value="leader">🐉 Духовный лидер (Кету)</option>
+                    <option value="discipline">♄ Дисциплина и результат (Сатурн)</option>
+                    <option value="health">♂ Защита здоровья и силы (Марс)</option>
+                </select>
+
+                <!-- Target Numbers Pills -->
+                <div id="targetNumbersContainer" class="hidden">
+                    <span class="block text-[11px] text-stone-400 mb-2">Выберите число воздействия:</span>
+                    <div id="targetNumbersPills" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <button type="button" id="calcBtn" class="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-black font-bold py-3.5 px-4 rounded-xl transition shadow-lg shadow-amber-500/20 text-sm cinzel tracking-wider uppercase cursor-pointer">
+                Рассчитать матрицу
+            </button>
+        </section>
+
+        <!-- Result Section (Hidden until calculation is triggered) -->
+        <div id="resultSection" class="space-y-6 hidden">
+            <!-- Notification Banner for Screenshot -->
+            <div id="screenshotBanner" class="hidden bg-amber-500/20 border border-amber-400/60 p-3.5 rounded-xl text-center text-amber-200 text-xs shadow-lg animate-pulse">
+                📸 <strong>Сделайте скриншот этого экрана</strong> и отправьте его мне в сообщения!
+            </div>
+
+            <!-- Personal Yantra Matrix Card -->
+            <section class="bg-stone-950/80 backdrop-blur-md p-5 rounded-2xl gold-border">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="cinzel text-xs font-bold text-amber-300 tracking-wider uppercase">ПЕРСОНАЛЬНАЯ ЯНТРА</h2>
+                    <span id="personalSubtitle" class="text-[10px] text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">Базовая матрица</span>
+                </div>
+                
+                <!-- Matrix 4x4 Grid -->
+                <div id="personalGrid" class="grid grid-cols-4 gap-2 mb-3">
+                    <!-- Заполняется динамически -->
+                </div>
+            </section>
+
+            <!-- Target Amulet Matrix Card -->
+            <section id="amuletCard" class="bg-stone-950/80 backdrop-blur-md p-5 rounded-2xl gold-border hidden gold-glow-strong">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="amuletCardTitle" class="cinzel text-xs font-bold text-amber-300 tracking-wider uppercase">ЦИФРОВОЙ АМУЛЕТ</h2>
+                    <span id="selectedTNBadge" class="text-[10px] text-black font-bold bg-gradient-to-r from-amber-300 to-amber-500 px-3 py-1 rounded-full border border-amber-300">Число: 24</span>
+                </div>
+                
+                <!-- Matrix 4x4 Grid -->
+                <div id="amuletGrid" class="grid grid-cols-4 gap-2 mb-4">
+                    <!-- JS Populated -->
+                </div>
+
+                <!-- Activation Info -->
+                <div id="activationInfo" class="mt-4 pt-4 border-t border-amber-500/20 space-y-2 text-xs">
+                    <!-- JS Populated -->
+                </div>
+            </section>
+
+            <!-- Action Button -->
+            <button type="button" id="screenshotBtn" class="w-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-500 text-black font-extrabold py-4 px-4 rounded-xl transition shadow-xl shadow-amber-500/20 text-sm cinzel tracking-widest uppercase cursor-pointer">
+                📸 Сделать скриншот расчета
+            </button>
+        </div>
+
+        <!-- Client Footer -->
+        <footer class="text-center pt-2">
+            <p class="text-[10px] text-stone-500 uppercase tracking-widest">Авторская методика Дарьи Карасевой</p>
+        </footer>
+
+    </main>
+
+    <!-- Modal for Cell Info -->
+    <div id="cellModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-stone-950 border border-amber-500/50 rounded-2xl max-w-sm w-full p-6 relative gold-glow-strong">
+            <button type="button" id="closeModalBtn" class="absolute top-4 right-4 text-amber-400/60 hover:text-amber-300 text-xl font-bold">&times;</button>
+            <div id="modalContent">
+                <!-- JS Populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            try { tg.ready(); } catch(e){}
+        }
+
+        const amuletData = {
+            personal: { name: "Персональная Янтра", numbers: [], planet: "База" },
+            career: { name: "Янтра на карьеру и реализацию", numbers: [1, 10, 19, 28], planet: "Солнце", day: "Воскресенье (восход солнца)", mantra: "ОМ ХРАМ ХРИМ ХРАУМ САХ СУРЙАЯ НАМАХ" },
+            calm: { name: "Янтра спокойствия и партнерства", numbers: [2, 11, 20, 29], planet: "Луна", day: "Понедельник (вечер)", mantra: "ОМ ШРАМ ШРИМ ШРАУМ САХ ЧАНДРАЙЯ НАМАХ" },
+            millionaire: { name: "Янтра миллионера", numbers: [3, 12, 21, 30], planet: "Юпитер", day: "Четверг (утренние часы)", mantra: "ОМ ГРАМ ГРИМ ГРАУМ САХ ГУРУВЕ НАМАХ" },
+            chaos: { name: "Янтра контроля хаоса", numbers: [4, 13, 22, 31], planet: "Раху", day: "Среда или Суббота (сумерки)", mantra: "ОМ БХРАМ БХРИМ БХРАУМ САХ РАХАВЕ НАМАХ" },
+            money: { name: "Янтра на быстрые деньги и удача", numbers: [5, 14, 23], planet: "Меркурий", day: "Среда (полдень)", mantra: "ОМ БРАМ БРИМ БРАУМ САХ БУДХАЙЯ НАМАХ" },
+            love: { name: "Янтра на любовь и крупную покупку", numbers: [6, 15, 24], planet: "Венера", day: "Пятница (вечер)", mantra: "ОМ ДРАМ ДРИМ ДРАУМ САХ ШУКРАЙЯ НАМАХ" },
+            leader: { name: "Янтра духовного лидера", numbers: [7, 16, 25], planet: "Кету", day: "Вторник или Суббота (ночь)", mantra: "ОМ СРАМ СРИМ СРАУМ САХ КЕТАВЕ НАМАХ" },
+            discipline: { name: "Янтра дисциплины и результата", numbers: [8, 17, 26], planet: "Сатурн", day: "Суббота (перед рассветом)", mantra: "ОМ ПРАМ ПРИМ ПРАУМ САХ ШАНАЙШЧАРАЙЯ НАМАХ" },
+            health: { name: "Защитная янтра здоровья и силы", numbers: [9, 18, 27], planet: "Марс", day: "Вторник (утренние часы)", mantra: "ОМ КРАМ КРИМ КРАУМ САХ БХАУМАНАМАХ" }
+        };
+
+        let currentTN = 24;
+        let isAccessAllowed = false;
+
+        // Parse URL Parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPaid = urlParams.get('paid') === 'true';
+        const isTest = urlParams.get('test') === 'true';
+        const preselectedType = urlParams.get('type');
+
+        function initAccessAndMode() {
+            const selectEl = document.getElementById('amuletType');
+
+            if (isTest) {
+                isAccessAllowed = true;
+                document.getElementById('testModeBanner').classList.remove('hidden');
+            } else if (isPaid || preselectedType) {
+                isAccessAllowed = true;
+                if (preselectedType && amuletData[preselectedType]) {
+                    selectEl.value = preselectedType;
+                    selectEl.disabled = true; 
+                }
+            } else {
+                isAccessAllowed = false;
+                document.getElementById('unpaidBanner').classList.remove('hidden');
+            }
+
+            updateTargetNumbersUI();
+        }
+
+        // Приведение ЛЮБОГО числа к однозначному (-9...9)
+        function reduceToSingleDigit(num) {
+            let n = parseInt(num, 10);
+            if (isNaN(n) || n === 0) return 0;
+            
+            const isNegative = n < 0;
+            let absValue = Math.abs(n);
+            
+            while (absValue > 9) {
+                absValue = String(absValue)
+                    .split('')
+                    .reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+            }
+            
+            return isNegative ? -absValue : absValue;
+        }
+
+        function updateTargetNumbersUI() {
+            const val = document.getElementById('amuletType').value;
+            const container = document.getElementById('targetNumbersContainer');
+            const pillsContainer = document.getElementById('targetNumbersPills');
+            pillsContainer.innerHTML = '';
+
+            if (val === 'personal') {
+                container.classList.add('hidden');
+            } else {
+                container.classList.remove('hidden');
+                const nums = amuletData[val].numbers;
+                currentTN = nums[0];
+                nums.forEach((n, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.innerText = n;
+                    btn.className = `px-3.5 py-1.5 rounded-lg text-xs font-bold transition border cursor-pointer ${idx === 0 ? 'bg-amber-400 text-black border-amber-300' : 'bg-black text-amber-200/80 border-amber-500/30 hover:border-amber-400'}`;
+                    btn.onclick = () => {
+                        currentTN = n;
+                        Array.from(pillsContainer.children).forEach(b => b.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition border cursor-pointer bg-black text-amber-200/80 border-amber-500/30 hover:border-amber-400');
+                        btn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition border cursor-pointer bg-amber-400 text-black border-amber-300';
+                    };
+                    pillsContainer.appendChild(btn);
+                });
+            }
+        }
+
+        function calculateAll() {
+            if (!isAccessAllowed) {
+                const banner = document.getElementById('unpaidBanner');
+                banner.classList.remove('hidden');
+                banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                banner.classList.add('animate-pulse');
+                setTimeout(() => banner.classList.remove('animate-pulse'), 1500);
+                return;
+            }
+
+            const dateInput = document.getElementById('birthDate').value;
+            if (!dateInput) {
+                alert("Пожалуйста, выберите дату рождения!");
+                return;
+            }
+
+            const parts = dateInput.split('-');
+            if (parts.length < 3) return;
+
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
+            const day = parseInt(parts[2], 10);
+
+            const d_raw = day;
+            const m_raw = month;
+            const y_raw = year;
+
+            // 1. ПЕРСОНАЛЬНАЯ ЯНТРА
+            const pA = reduceToSingleDigit(m_raw);
+            const pB = reduceToSingleDigit(d_raw);
+            const pC = reduceToSingleDigit(y_raw);
+            const pD = reduceToSingleDigit(d_raw + m_raw + y_raw);
+
+            const pE = reduceToSingleDigit(y_raw - 2);
+            const pF = reduceToSingleDigit(reduceToSingleDigit(y_raw) - 5); 
+            const pG = reduceToSingleDigit(m_raw - 2);
+            const pH = reduceToSingleDigit(d_raw + 2);
+
+            const pI = reduceToSingleDigit(reduceToSingleDigit(y_raw) + 3);
+            const pJ = reduceToSingleDigit(y_raw + 1);
+            const pK = reduceToSingleDigit(d_raw - 1);
+            const pL = reduceToSingleDigit(m_raw - 1);
+
+            const pM = reduceToSingleDigit(d_raw + 1);
+            const pN = reduceToSingleDigit(m_raw - 3); 
+            const pO = reduceToSingleDigit(reduceToSingleDigit(y_raw) - 4);
+            const pP = reduceToSingleDigit(y_raw - 1);
+
+            const personalMatrix = [
+                [pA, pB, pC, pD],
+                [pE, pF, pG, pH],
+                [pI, pJ, pK, pL],
+                [pM, pN, pO, pP]
+            ];
+
+            renderGrid('personalGrid', personalMatrix, 'personal');
+
+            // 2. ЦИФРОВОЙ АМУЛЕТ
+            const amuletType = document.getElementById('amuletType').value;
+            const amuletCard = document.getElementById('amuletCard');
+
+            if (amuletType !== 'personal') {
+                amuletCard.classList.remove('hidden');
+                document.getElementById('selectedTNBadge').innerText = 'Число: ' + currentTN;
+                document.getElementById('amuletCardTitle').innerText = amuletData[amuletType].name.toUpperCase();
+
+                const aA = reduceToSingleDigit(pA);
+                const aB = reduceToSingleDigit(pB);
+                const aC = reduceToSingleDigit(pC);
+                const aD = reduceToSingleDigit(currentTN - (aA + aB + aC));
+
+                const aE = reduceToSingleDigit(pE);
+                const aG = reduceToSingleDigit(pG);
+                const aH = reduceToSingleDigit(pH);
+                const aF = reduceToSingleDigit(currentTN - (aE + aG + aH));
+
+                const aJ = reduceToSingleDigit(pJ);
+                const aK = reduceToSingleDigit(pK);
+                const aL = reduceToSingleDigit(pL);
+                const aI = reduceToSingleDigit(currentTN - (aJ + aK + aL));
+
+                const aM = reduceToSingleDigit(pM);
+                const aN = reduceToSingleDigit(pN);
+                const aP = reduceToSingleDigit(pP);
+                const aO = reduceToSingleDigit(currentTN - (aM + aN + aP));
+
+                const amuletMatrix = [
+                    [aA, aB, aC, aD],
+                    [aE, aF, aG, aH],
+                    [aI, aJ, aK, aL],
+                    [aM, aN, aO, aP]
+                ];
+
+                renderGrid('amuletGrid', amuletMatrix, 'amulet');
+                renderActivationInfo(amuletType);
+            } else {
+                amuletCard.classList.add('hidden');
+            }
+
+            // Показываем блок результатов и баннер со скриншотом
+            document.getElementById('resultSection').classList.remove('hidden');
+            document.getElementById('screenshotBanner').classList.remove('hidden');
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderGrid(elementId, matrix, type) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+            container.innerHTML = '';
+            matrix.forEach((row, rIdx) => {
+                row.forEach((val, cIdx) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'matrix-cell h-14 border border-amber-500/30 rounded-xl flex items-center justify-center text-base font-bold text-amber-200 cursor-pointer gold-border-subtle';
+                    cell.innerText = val;
+                    cell.onclick = () => showCellInfo(type, rIdx, cIdx, val);
+                    container.appendChild(cell);
+                });
+            });
+        }
+
+        function renderActivationInfo(type) {
+            const infoBox = document.getElementById('activationInfo');
+            if (!infoBox) return;
+            const data = amuletData[type];
+            infoBox.innerHTML = `
+                <div class="text-stone-300"><span class="text-amber-400 font-semibold">Покровитель:</span> ${data.planet}</div>
+                <div class="text-stone-300"><span class="text-amber-400 font-semibold">Время активации:</span> ${data.day}</div>
+                <div class="text-stone-300 mt-1"><span class="text-amber-400 font-semibold">Мантра:</span> <span class="italic text-amber-200 font-medium">${data.mantra}</span></div>
+            `;
+        }
+
+        const sectorNames = {
+            "0,0": "Точка A (Месяц / Подход к делу)",
+            "0,1": "Точка B (День / Число Души)",
+            "0,2": "Точка C (Год / Опыт)",
+            "0,3": "Точка D (Число Судьбы / Суммарный код)",
+            "1,0": "Точка E (Год - 2)",
+            "1,1": "Точка F (Близкие люди)",
+            "1,2": "Точка G (Месяц - 2)",
+            "1,3": "Точка H (День + 2)",
+            "2,0": "Точка I (Таланты и способности)",
+            "2,1": "Точка J (Год + 1)",
+            "2,2": "Точка K (День - 1)",
+            "2,3": "Точка L (Месяц - 1)",
+            "3,0": "Точка M (День + 1)",
+            "3,1": "Точка N (Месяц - 3)",
+            "3,2": "Точка O (Помощь и возможности)",
+            "3,3": "Точка P (Мировоззрение)"
+        };
+
+        function showCellInfo(type, r, c, val) {
+            const key = `${r},${c}`;
+            const title = sectorNames[key] || "Сектор матрицы";
+            const modal = document.getElementById('cellModal');
+            const content = document.getElementById('modalContent');
+            content.innerHTML = `
+                <div class="text-[10px] text-amber-400 uppercase tracking-widest font-semibold mb-1">${type === 'personal' ? 'Персональная Янтра' : 'Цифровой Амулет'}</div>
+                <h3 class="cinzel text-base font-bold text-white mb-3">${title}</h3>
+                <div class="bg-black/90 p-4 rounded-xl border border-amber-500/30 text-center mb-4">
+                    <span class="text-3xl font-extrabold text-amber-300">${val}</span>
+                </div>
+                <p class="text-xs text-stone-300 leading-relaxed">Данный сектор матрицы отражает ваши внутренние вибрации и энергетический потенциал.</p>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('cellModal').classList.add('hidden');
+        }
+
+        function triggerScreenshotNotice() {
+            const banner = document.getElementById('screenshotBanner');
+            if (banner) {
+                banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                banner.classList.add('animate-pulse');
+                setTimeout(() => banner.classList.remove('animate-pulse'), 1500);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initAccessAndMode();
+            document.getElementById('amuletType').addEventListener('change', updateTargetNumbersUI);
+            document.getElementById('calcBtn').addEventListener('click', calculateAll);
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('screenshotBtn').addEventListener('click', triggerScreenshotNotice);
+        });
+    </script>
+</body>
+</html>
