@@ -3950,19 +3950,21 @@
                 }
             };
 
-            const sectorDetailsList = [];
-            if (isPersonal) {
-                calculatedMatrixData.matrix.forEach((row, r) => {
-                    row.forEach((val, c) => {
-                        const key = `${r},${c}`;
-                        const sectorInfo = matrixDescriptionsDictionary[key] || {};
-                        const sectorName = sectorInfo.name || `Сектор ${String.fromCharCode(65 + r * 4 + c)}`;
-                        
-                        const absVal = Math.abs(parseInt(val, 10)) || 0;
-                        let descText = sectorInfo[absVal] || `Описание для значения ${val} в этом секторе.`;
-                        if (val < 0) {
-                            descText = `(Теневое проявление) ${descText}`;
-                        }
+           const sectorDetailsList = [];
+if (isPersonal) {
+    calculatedMatrixData.matrix.forEach((row, r) => {
+        row.forEach((val, c) => {
+            const key = `${r},${c}`;
+            const sectorInfo = matrixDescriptionsDictionary[key] || {};
+            const sectorName = sectorInfo.name || `Сектор ${String.fromCharCode(65 + r * 4 + c)}`;
+            
+            // Ищем точное описание по ключу (для -1 ищет "-1", для 1 ищет "1")
+            const lookupKey = String(val);
+            
+            // Берём напрямую текст из словаря
+            let descText = sectorInfo[lookupKey] || `Описание для значения ${val} в этом секторе.`;
+            
+            // Больше ничего принудительно не дописываем, показываем чистое описание из объекта
 
                         sectorDetailsList.push({
                             stack: [
