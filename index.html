@@ -401,10 +401,24 @@
                 if (isTest) {
                     document.getElementById('testModeBanner').classList.remove('hidden');
                 }
-                if (preselectedType && amuletData[preselectedType]) {
-                    selectEl.value = preselectedType;
-                    selectEl.disabled = true; 
-                }
+                if (preselectedType) {
+    const types = preselectedType.split(',')
+        .map(t => t.trim())
+        .filter(t => amuletData[t]);
+
+    if (types.length === 1) {
+        // одна ссылка = один элемент (как раньше)
+        selectEl.value = types[0];
+        selectEl.disabled = true;
+    } else if (types.length > 1) {
+        // комплект: оставляем в списке только разрешённые пункты
+        Array.from(selectEl.options).forEach(opt => {
+            if (!types.includes(opt.value)) opt.remove();
+        });
+        selectEl.value = types[0];
+        selectEl.disabled = false;
+    }
+}
                 if (unpaidBanner) unpaidBanner.classList.add('hidden');
             } else {
                 isAccessAllowed = false;
