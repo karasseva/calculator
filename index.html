@@ -4211,40 +4211,48 @@ width: pageSize.width,
         }
 
  document.addEventListener('DOMContentLoaded', () => {
-    const STORAGE_KEY = 'calc_session_status';
+    const STORAGE_KEY_TIME = 'calc_session_expiry';
+    const SESSION_DURATION = 15 * 60 * 1000; // Ровно 15 минут в миллисекундах
 
-    let sessionStatus = localStorage.getItem(STORAGE_KEY);
+    // Проверяем, пришел ли пользователь прямо из мессенджера/бота
+    const referrer = document.referrer.toLowerCase();
+    const isFromBot = referrer.includes('t.me') || 
+                      referrer.includes('telegram') || 
+                      referrer.includes('instagram') || 
+                      referrer.includes('whatsapp') || 
+                      referrer.includes('leadconverter');
 
-    // Если статус ранее был завершен ('completed'), но пользователь СНОВА перешел по ссылке из бота
-    // (мы проверяем, открыта ли страница заново или это свежий визит)
-    // Мы даем возможность сделать новый расчет!
-    
-    // Давайте сделаем проще и надежнее: каждый новый полноценный заход по ссылке 
-    // сбрасывает старый статус, если пользователь уже скачал прошлый PDF.
-    if (sessionStatus === 'completed') {
-        // Проверяем: если пользователь зашел заново (например, страница загрузилась первый раз за сессию)
-        // Разрешаем новый вход и сбрасываем статус на active
-        localStorage.setItem(STORAGE_KEY, 'active');
-        sessionStatus = 'active';
+    let expiryTime = localStorage.getItem(STORAGE_KEY_TIME);
+    let now = Date.now();
+
+    // Если человек только что кликнул по ссылке в боте (новая покупка / новый заход) — 
+    // мы ВСЕГДА обновляем таймер и даем свежие 15 минут!
+    if (isFromBot || !expiryTime || now > parseInt(expiryTime)) {
+        if (isFromBot || !expiryTime) {
+            expiryTime = now + SESSION_DURATION;
+            localStorage.setItem(STORAGE_KEY_TIME, expiryTime);
+        }
     }
 
-    // Если статус вообще пустой (самый первый заход)
-    if (!sessionStatus) {
-        localStorage.setItem(STORAGE_KEY, 'active');
+    // Если 15 минут истекли
+    if (now > parseInt(expiryTime)) {
+        document.body.innerHTML = `
+            <div style="text-align:center; padding:50px; font-family:sans-serif; color:#333;">
+                <h2>Время сессии истекло</h2>
+                <p>Доступ по этой ссылке завершен (сессия длится 15 минут).</p>
+                <p>Для нового расчета вернитесь в бот и оформите повторный заказ.</p>
+            </div>
+        `;
+        return; // Блокируем калькулятор
     }
-
-           // --- ВАШИ ИСХОДНЫЕ СТРОКИ ИНИЦИАЛИЗАЦИИ ---
+// --- ВАШИ ИСХОДНЫЕ СТРОКИ ИНИЦИАЛИЗАЦИИ ---
     initAccessAndMode(); 
     document.getElementById('amuletType').addEventListener('change', updateTargetNumbersUI);
     document.getElementById('calcBtn').addEventListener('click', calculateAll);
     document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-    
-    // Как только пользователь скачивает PDF, сессия помечается как завершенная
-    document.getElementById('downloadPdfBtn').addEventListener('click', () => {
-        generatePDFReport();
-        localStorage.setItem(STORAGE_KEY, 'completed');
-    });
+    document.getElementById('downloadPdfBtn').addEventListener('click', generatePDFReport);
 });
+
     </script>
 </body>
 </html>
