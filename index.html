@@ -4210,34 +4210,49 @@ width: pageSize.width,
             }
         }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    // 1. Автоматическая проверка 15 минут по метке времени из ссылки
-    const urlParams = new URLSearchParams(window.location.search);
-    const linkTime = urlParams.get('t');
+ document.addEventListener('DOMContentLoaded', () => {
+            const STORAGE_KEY = 'calc_order_status'; // Статус заказа в памяти браузера
 
-    if (linkTime) {
-        const now = Date.now();
-        // Переводим разницу из миллисекунд в минуты
-        const diffMinutes = (now - parseInt(linkTime)) / (1000 * 60);
+            // Проверяем, пришел ли пользователь только что из бота по ссылке
+            const referrer = document.referrer.toLowerCase();
+            const isFromBot = referrer.includes('t.me') || 
+                              referrer.includes('telegram') || 
+                              referrer.includes('instagram') || 
+                              referrer.includes('whatsapp') || 
+                              referrer.includes('leadconverter');
 
-        if (diffMinutes > 15) {
-            document.body.innerHTML = `
-                <div style="text-align:center; padding:50px; font-family:sans-serif; color:#333;">
-                    <h2>Срок действия ссылки истек</h2>
-                    <p>Эта ссылка была действительна 15 минут.</p>
-                    <p>Пожалуйста, вернитесь в бот и запросите расчет заново.</p>
-                </div>
-            `;
-            return; // Завершаем работу, калькулятор не инициализируется
-        }
-    }
-    initAccessAndMode(); // Главная инициализация доступа и параметров
-    document.getElementById('amuletType').addEventListener('change', updateTargetNumbersUI);
-    document.getElementById('calcBtn').addEventListener('click', calculateAll);
-    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-    document.getElementById('downloadPdfBtn').addEventListener('click', generatePDFReport);
-});
+            let orderStatus = localStorage.getItem(STORAGE_KEY);
 
+            // Если человек только что кликнул по ссылке в боте (новая покупка/новый заказ) — 
+            // мы разрешаем доступ и ставим статус «активен».
+            if (isFromBot || !orderStatus) {
+                localStorage.setItem(STORAGE_KEY, 'active');
+                orderStatus = 'active';
+            }
+
+            // Если заказ уже помечен как использованный/завершенный
+            if (orderStatus === 'completed') {
+                document.body.innerHTML = `
+                    <div style="text-align:center; padding:50px; font-family:sans-serif; color:#333;">
+                        <h2>Расчет по этой ссылке уже был выполнен</h2>
+                        <p>Данная ссылка одноразовая и уже использована.</p>
+                        <p>Для нового расчета оформите повторный заказ в боте.</p>
+                    </div>
+                `;
+                return; // Блокируем калькулятор
+            }
+
+            initAccessAndMode(); // Главная инициализация доступа и параметров
+            document.getElementById('amuletType').addEventListener('change', updateTargetNumbersUI);
+            document.getElementById('calcBtn').addEventListener('click', calculateAll);
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            
+            // При скачивании PDF ставим метку, что ссылка использована
+            document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+                generatePDFReport();
+                localStorage.setItem(STORAGE_KEY, 'completed');
+            });
+        });
     </script>
 </body>
 </html>
