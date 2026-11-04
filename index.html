@@ -4211,6 +4211,26 @@ width: pageSize.width,
         }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // 1. Автоматическая проверка 15 минут по метке времени из ссылки
+    const urlParams = new URLSearchParams(window.location.search);
+    const linkTime = urlParams.get('t');
+
+    if (linkTime) {
+        const now = Date.now();
+        // Переводим разницу из миллисекунд в минуты
+        const diffMinutes = (now - parseInt(linkTime)) / (1000 * 60);
+
+        if (diffMinutes > 15) {
+            document.body.innerHTML = `
+                <div style="text-align:center; padding:50px; font-family:sans-serif; color:#333;">
+                    <h2>Срок действия ссылки истек</h2>
+                    <p>Эта ссылка была действительна 15 минут.</p>
+                    <p>Пожалуйста, вернитесь в бот и запросите расчет заново.</p>
+                </div>
+            `;
+            return; // Завершаем работу, калькулятор не инициализируется
+        }
+    }
     initAccessAndMode(); // Главная инициализация доступа и параметров
     document.getElementById('amuletType').addEventListener('change', updateTargetNumbersUI);
     document.getElementById('calcBtn').addEventListener('click', calculateAll);
