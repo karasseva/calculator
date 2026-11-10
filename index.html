@@ -731,6 +731,7 @@
 
             calculatedMatrixData = {
                 date: dateInput,
+                dateRu: `${parts[2]}-${parts[1]}-${parts[0]}`, // дд-мм-гггг для PDF
                 amuletType: amuletType,
                 targetNumber: currentTN,
                 soulNumber: soulNumber,
@@ -4094,7 +4095,7 @@ const soulDictionary = {
         { text: 'ГАРМОНИЯ · РАЗВИТИЕ · ЛЮБОВЬ · УСПЕХ', style: 'topTag', alignment: 'center' },
         { text: 'НУМЕРОЛОГ ДАРЬЯ КАРАСЕВА', style: 'subHeader', alignment: 'center' },
         { text: (typeof pdfTitle !== 'undefined' ? pdfTitle : "НУМЕРОЛОГИЧЕСКИЙ ОТЧЕТ").toUpperCase(), style: 'mainHeader', alignment: 'center' },
-        { text: `Расчёт от ${calculatedMatrixData.date}`, style: 'dateText', alignment: 'center' },
+        { text: `Расчёт от ${calculatedMatrixData.dateRu}`, style: 'dateText', alignment: 'center' },
         { text: ' ', margin: [0, 5] }
     ];
 
@@ -4349,7 +4350,7 @@ width: pageSize.width,
             introText: { fontSize: 11, italic: true, color: muted }
         }
     };
-    pdfMake.createPdf(docDefinition).download(`Yantra_${calculatedMatrixData.date}.pdf`);
+    pdfMake.createPdf(docDefinition).download(`Yantra_${calculatedMatrixData.dateRu}.pdf`);
 }
         function initFx() {
             const layer = document.getElementById('fxLayer');
